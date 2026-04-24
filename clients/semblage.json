@@ -1,9 +1,9 @@
 {
-	"client_id": "https://codegod100.github.io/obsidian-callback/clients/semblage.json?v=3",
+	"client_id": "https://codegod100.github.io/obsidian-callback/clients/semblage.json?v=4",
 	"client_name": "Semblage",
 	"client_uri": "https://codegod100.github.io/obsidian-callback/",
 	"redirect_uris": [
-		"https://codegod100.github.io/obsidian-callback/callback.html?scheme=semblage-oauth"
+		"https://codegod100.github.io/obsidian-callback/callback-semblage.html"
 	],
 	"scope": "atproto transition:generic",
 	"grant_types": ["authorization_code", "refresh_token"],

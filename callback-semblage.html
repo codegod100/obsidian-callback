@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting to Obsidian...</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+      const error = params.get('error');
+      const errorDesc = params.get('error_description');
+
+      if (error) {
+        document.body.innerHTML = '<h1>Authorization Error</h1><p>' + (errorDesc || error) + '</p>';
+        return;
+      }
+
+      if (!code) {
+        document.body.innerHTML = '<h1>Missing Authorization Code</h1><p>The OAuth provider did not send a <code>code</code> parameter. Try logging in again.</p>';
+        return;
+      }
+
+      window.location.href = 'obsidian://semblage-oauth?' + params.toString();
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting to Obsidian...</p>
+</body>
+</html>
