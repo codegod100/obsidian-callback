@@ -2,88 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Obsidian OAuth Redirect</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      max-width: 700px;
-      margin: 60px auto;
-      padding: 0 20px;
-      line-height: 1.6;
-      color: #333;
-    }
-    h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    .info { background: #f0f4f8; border-radius: 6px; padding: 16px; margin: 20px 0; font-family: monospace; font-size: 0.85rem; }
-    .info strong { color: #000; }
-    .error { color: #c00; }
-    .success { color: #080; }
-    .highlight { background: #ffffcc; padding: 2px 4px; }
-  </style>
-</head>
-<body>
-  <h1 id="status">Processing OAuth callback...</h1>
-  <div class="info" id="debug"></div>
-
+  <title>Redirecting to Obsidian...</title>
   <script>
+    // Read OAuth params from query string OR hash fragment.
+    // AT Protocol PDS sometimes sends auth response in the URL hash.
     (function () {
-      const debug = document.getElementById('debug');
-      const status = document.getElementById('status');
-      const lines = [];
+      const search = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
-      function log(label, value) {
-        lines.push('<strong>' + label + ':</strong> ' + (value === '' ? '(empty)' : value === null ? '(null)' : String(value)));
-      }
-
-      // Log everything about the current URL
-      log('window.location.href', window.location.href);
-      log('window.location.search', window.location.search);
-      log('window.location.hash', window.location.hash);
-
-      // Check query params
-      const searchParams = new URLSearchParams(window.location.search);
-      const searchEntries = Array.from(searchParams.entries());
-      log('query param count', searchEntries.length);
-      searchEntries.forEach(function(pair) {
-        log('  query.' + pair[0], pair[1]);
-      });
-
-      // Check hash/fragment params (some PDSes send code here)
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const hashEntries = Array.from(hashParams.entries());
-      log('hash param count', hashEntries.length);
-      hashEntries.forEach(function(pair) {
-        log('  hash.' + pair[0], pair[1]);
-      });
-
-      // Try to find code/state/error from either location
-      let code = searchParams.get('code') || hashParams.get('code');
-      let state = searchParams.get('state') || hashParams.get('state');
-      let error = searchParams.get('error') || hashParams.get('error');
-      let errorDesc = searchParams.get('error_description') || hashParams.get('error_description');
-
-      log('resolved code', code);
-      log('resolved state', state);
-      log('resolved error', error);
-
-      debug.innerHTML = lines.join('<br>');
+      // Prefer query, fall back to hash
+      const code = search.get('code') || hash.get('code');
+      const state = search.get('state') || hash.get('state');
+      const iss = search.get('iss') || hash.get('iss');
+      const error = search.get('error') || hash.get('error');
+      const errorDesc = search.get('error_description') || hash.get('error_description');
 
       if (error) {
-        status.innerHTML = '<span class="error">Authorization Error: ' + (errorDesc || error) + '</span>';
+        document.body.innerHTML = '<h1>Authorization Error</h1><p>' + (errorDesc || error) + '</p>';
         return;
       }
 
       if (!code) {
-        status.innerHTML = '<span class="error">Missing Authorization Code</span>';
+        document.body.innerHTML = '<h1>Missing Authorization Code</h1><p>No <code>code</code> found in query or hash. Full URL: <code>' + window.location.href + '</code></p>';
         return;
       }
 
-      // Use whichever params had the code
-      const effectiveParams = searchParams.get('code') ? searchParams : hashParams;
-      const obsidianUrl = 'obsidian://semblage-oauth?' + effectiveParams.toString();
+      // Build obsidian:// redirect with params in query string (hash doesn't survive protocol redirect)
+      const redirect = new URLSearchParams();
+      if (code) redirect.set('code', code);
+      if (state) redirect.set('state', state);
+      if (iss) redirect.set('iss', iss);
 
-      status.innerHTML = '<span class="success">Redirecting to Obsidian...</span>';
-      window.location.href = obsidianUrl;
+      window.location.href = 'obsidian://semblage-oauth?' + redirect.toString();
     })();
   </script>
+</head>
+<body>
+  <p>Redirecting to Obsidian...</p>
 </body>
 </html>
