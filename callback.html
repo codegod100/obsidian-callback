@@ -2,21 +2,99 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Redirecting to Obsidian...</title>
-  <script>
-    (function () {
-      const params = new URLSearchParams(window.location.search);
-      const scheme = params.get('scheme');
-      if (!scheme) {
-        document.body.innerHTML = '<h1>Error: no scheme specified.</h1>';
-        return;
-      }
-      params.delete('scheme');
-      window.location.href = 'obsidian://' + scheme + '?' + params.toString();
-    })();
-  </script>
+  <title>Obsidian OAuth Redirect</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+      color: #333;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    p { color: #666; margin-bottom: 2rem; }
+    .debug {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: left;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #444;
+      margin-top: 2rem;
+    }
+    .debug strong { color: #000; }
+    .error { color: #c00; }
+    .success { color: #080; }
+  </style>
 </head>
 <body>
-  <p>Redirecting to Obsidian...</p>
+  <h1>Redirecting to Obsidian...</h1>
+  <p id="status">Processing OAuth callback...</p>
+  <div class="debug" id="debug"></div>
+
+  <script>
+    (function () {
+      const debug = document.getElementById('debug');
+      const status = document.getElementById('status');
+      const lines = [];
+
+      function log(label, value) {
+        lines.push('<strong>' + label + ':</strong> ' + (value === '' ? '(empty)' : value === null ? '(null)' : value === undefined ? '(undefined)' : String(value)));
+      }
+
+      // 1. Log everything we can see
+      log('window.location.href', window.location.href);
+      log('window.location.search', window.location.search);
+      log('window.location.hash', window.location.hash);
+
+      const params = new URLSearchParams(window.location.search);
+      const entries = Array.from(params.entries());
+      log('query param count', entries.length);
+      entries.forEach(function(pair) {
+        log('  ' + pair[0], pair[1]);
+      });
+
+      // 2. Extract scheme
+      const scheme = params.get('scheme');
+      log('scheme', scheme);
+
+      if (!scheme) {
+        status.innerHTML = '<span class="error">Error: no <code>scheme</code> found in URL.</span>';
+        debug.innerHTML = lines.join('<br>');
+        return;
+      }
+
+      // 3. Extract OAuth params
+      const code = params.get('code');
+      const state = params.get('state');
+      const error = params.get('error');
+      log('code', code);
+      log('state', state);
+      log('error', error);
+
+      if (error) {
+        status.innerHTML = '<span class="error">Authorization error: ' + error + '</span>';
+        debug.innerHTML = lines.join('<br>');
+        return;
+      }
+
+      if (!code) {
+        status.innerHTML = '<span class="error">Error: no <code>code</code> parameter found.<br>The authorization server did not send an authorization code.</span>';
+        debug.innerHTML = lines.join('<br>');
+        return;
+      }
+
+      // 4. Build redirect
+      params.delete('scheme');
+      const obsidianUrl = 'obsidian://' + scheme + '?' + params.toString();
+      log('redirecting to', obsidianUrl);
+      debug.innerHTML = lines.join('<br>');
+
+      status.innerHTML = '<span class="success">Redirecting to Obsidian now...</span>';
+      window.location.href = obsidianUrl;
+    })();
+  </script>
 </body>
 </html>
