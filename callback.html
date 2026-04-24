@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting to Obsidian...</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const scheme = params.get('scheme');
+      if (!scheme) {
+        document.body.innerHTML = '<h1>Error: no scheme specified.</h1>';
+        return;
+      }
+      params.delete('scheme');
+      window.location.href = 'obsidian://' + scheme + '?' + params.toString();
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting to Obsidian...</p>
+</body>
+</html>
