@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <title>Redirecting to Obsidian...</title>
+</head>
+<body>
+  <p>Redirecting to Obsidian...</p>
+
   <script>
-    // Read OAuth params from query string OR hash fragment.
-    // AT Protocol PDS sometimes sends auth response in the URL hash.
     (function () {
+      // Read OAuth params from query string OR hash fragment.
+      // AT Protocol PDS sends auth response in URL hash.
       const search = new URLSearchParams(window.location.search);
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
-      // Prefer query, fall back to hash
       const code = search.get('code') || hash.get('code');
       const state = search.get('state') || hash.get('state');
       const iss = search.get('iss') || hash.get('iss');
@@ -27,17 +30,14 @@
         return;
       }
 
-      // Build obsidian:// redirect with params in query string (hash doesn't survive protocol redirect)
+      // Forward to Obsidian protocol
       const redirect = new URLSearchParams();
-      if (code) redirect.set('code', code);
+      redirect.set('code', code);
       if (state) redirect.set('state', state);
       if (iss) redirect.set('iss', iss);
 
       window.location.href = 'obsidian://semblage-oauth?' + redirect.toString();
     })();
   </script>
-</head>
-<body>
-  <p>Redirecting to Obsidian...</p>
 </body>
 </html>
