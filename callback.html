@@ -49,15 +49,11 @@
       log('window.location.search', window.location.search);
       log('window.location.hash', window.location.hash);
 
-      const params = new URLSearchParams(window.location.search);
-      const entries = Array.from(params.entries());
-      log('query param count', entries.length);
-      entries.forEach(function(pair) {
-        log('  ' + pair[0], pair[1]);
-      });
+      const search = new URLSearchParams(window.location.search);
+      const hashStr = window.location.hash.replace(/^#/, '');
+      const hash = new URLSearchParams(hashStr);
 
-      // 2. Extract scheme
-      const scheme = params.get('scheme');
+      const scheme = search.get('scheme');
       log('scheme', scheme);
 
       if (!scheme) {
@@ -66,12 +62,14 @@
         return;
       }
 
-      // 3. Extract OAuth params
-      const code = params.get('code');
-      const state = params.get('state');
-      const error = params.get('error');
+      // 3. Extract OAuth params from query or hash
+      const code = search.get('code') || hash.get('code');
+      const state = search.get('state') || hash.get('state');
+      const iss = search.get('iss') || hash.get('iss');
+      const error = search.get('error') || hash.get('error');
       log('code', code);
       log('state', state);
+      log('iss', iss);
       log('error', error);
 
       if (error) {
@@ -87,8 +85,11 @@
       }
 
       // 4. Build redirect
-      params.delete('scheme');
-      const obsidianUrl = 'obsidian://' + scheme + '?' + params.toString();
+      const redirect = new URLSearchParams();
+      redirect.set('code', code);
+      if (state) redirect.set('state', state);
+      if (iss) redirect.set('iss', iss);
+      const obsidianUrl = 'obsidian://' + scheme + '?' + redirect.toString();
       log('redirecting to', obsidianUrl);
       debug.innerHTML = lines.join('<br>');
 
