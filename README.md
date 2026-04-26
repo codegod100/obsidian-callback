@@ -19,7 +19,8 @@ obsidian://semblage-oauth?code=xxx&state=yyy
 ## Supported plugins
 
 - **Semblage** — `?scheme=semblage-oauth`
-- *(mathblog and freeq-chat coming soon)*
+- **MyST** — `?scheme=myst-oauth`
+- *(freeq-chat coming soon)*
 
 ## Deploying
 

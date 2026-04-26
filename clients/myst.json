@@ -1,0 +1,14 @@
+{
+	"client_id": "https://codegod100.github.io/obsidian-callback/clients/myst.json",
+	"client_name": "Obsidian MyST",
+	"client_uri": "https://codegod100.github.io/obsidian-callback/",
+	"redirect_uris": [
+		"https://codegod100.github.io/obsidian-callback/callback.html?scheme=myst-oauth"
+	],
+	"scope": "atproto transition:generic",
+	"grant_types": ["authorization_code", "refresh_token"],
+	"response_types": ["code"],
+	"token_endpoint_auth_method": "none",
+	"application_type": "native",
+	"dpop_bound_access_tokens": true
+}
