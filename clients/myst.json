@@ -3,7 +3,7 @@
 	"client_name": "Obsidian MyST",
 	"client_uri": "https://codegod100.github.io/obsidian-callback/",
 	"redirect_uris": [
-		"https://codegod100.github.io/obsidian-callback/callback.html?scheme=myst-oauth"
+		"https://codegod100.github.io/obsidian-callback/callback-myst.html"
 	],
 	"scope": "atproto transition:generic",
 	"grant_types": ["authorization_code", "refresh_token"],

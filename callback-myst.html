@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Obsidian OAuth Redirect</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 0 20px;
+      text-align: center;
+      color: #333;
+    }
+    h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    p { color: #666; margin-bottom: 1.5rem; }
+    .btn {
+      display: inline-block;
+      padding: 10px 24px;
+      background: #4f46e5;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .btn:hover { background: #4338ca; }
+    .error { color: #c00; }
+    .hidden { display: none; }
+    .debug {
+      background: #f5f5f5;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: left;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #444;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="status">Redirecting to Obsidian...</h1>
+  <p id="message">Please wait...</p>
+
+  <div id="manual" class="hidden">
+    <p>Automatic redirect failed. Click below to open Obsidian:</p>
+    <a id="link" class="btn" href="#">Open Obsidian</a>
+  </div>
+
+  <div class="debug" id="debug"></div>
+
+  <script>
+    (function () {
+      const status = document.getElementById('status');
+      const message = document.getElementById('message');
+      const manual = document.getElementById('manual');
+      const link = document.getElementById('link');
+      const debug = document.getElementById('debug');
+
+      function getParams() {
+        // Try query first, then hash
+        const search = new URLSearchParams(window.location.search);
+        const hashStr = window.location.hash.replace(/^#/, '');
+        const hash = new URLSearchParams(hashStr);
+
+        const code = search.get('code') || hash.get('code');
+        const state = search.get('state') || hash.get('state');
+        const iss = search.get('iss') || hash.get('iss');
+        const error = search.get('error') || hash.get('error');
+        const errorDesc = search.get('error_description') || hash.get('error_description');
+
+        return { code, state, iss, error, errorDesc, searchCount: search.size, hashCount: hash.size, href: window.location.href };
+      }
+
+      function attemptRedirect(retry) {
+        const p = getParams();
+
+        debug.innerHTML =
+          '<strong>href:</strong> ' + p.href + '<br>' +
+          '<strong>retry:</strong> ' + retry + '<br>' +
+          '<strong>searchCount:</strong> ' + p.searchCount + '<br>' +
+          '<strong>hashCount:</strong> ' + p.hashCount + '<br>' +
+          '<strong>code:</strong> ' + (p.code || '(null)') + '<br>' +
+          '<strong>state:</strong> ' + (p.state || '(null)') + '<br>' +
+          '<strong>iss:</strong> ' + (p.iss || '(null)') + '<br>' +
+          '<strong>error:</strong> ' + (p.error || '(null)');
+
+        if (p.error) {
+          status.innerHTML = '<span class="error">Authorization Error</span>';
+          message.textContent = p.errorDesc || p.error;
+          return;
+        }
+
+        if (!p.code) {
+          if (retry < 3) {
+            message.textContent = 'Waiting for authorization code (' + (retry + 1) + '/3)...';
+            setTimeout(function () { attemptRedirect(retry + 1); }, 500);
+            return;
+          }
+          status.innerHTML = '<span class="error">Missing Authorization Code</span>';
+          message.textContent = 'No code found. Please check the URL contains #code=... and try again, or click below.';
+          manual.classList.remove('hidden');
+          return;
+        }
+
+        // Build obsidian:// URL
+        const redirect = new URLSearchParams();
+        redirect.set('code', p.code);
+        if (p.state) redirect.set('state', p.state);
+        if (p.iss) redirect.set('iss', p.iss);
+        const obsidianUrl = 'obsidian://myst-oauth?' + redirect.toString();
+
+        link.href = obsidianUrl;
+        message.textContent = 'Opening Obsidian...';
+
+        // Try protocol redirect
+        window.location.href = obsidianUrl;
+
+        // Show manual fallback after a short delay in case protocol doesn't open
+        setTimeout(function () {
+          status.innerHTML = 'Did Obsidian open?';
+          message.textContent = 'If Obsidian did not open automatically, click the button below.';
+          manual.classList.remove('hidden');
+        }, 1500);
+      }
+
+      attemptRedirect(0);
+    })();
+  </script>
+</body>
+</html>
